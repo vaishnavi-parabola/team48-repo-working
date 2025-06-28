@@ -1,0 +1,35 @@
+// {
+//   "compilerOptions": {
+//     "jsx": "react-jsx", // 👈 REQUIRED
+//     "module": "ESNext",
+//     "target": "ESNext",
+//     "moduleResolution": "Node",
+//     "esModuleInterop": true,
+//     "strict": true,
+//     "baseUrl": ".",
+//     "paths": {
+//       "@/*": ["./src/*"]
+//     }
+//   }
+// }
+
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
