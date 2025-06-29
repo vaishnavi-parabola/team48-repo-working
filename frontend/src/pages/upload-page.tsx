@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { uploadFiles } from "@/api/api";
 import axios from "axios";
+
  
+
 interface UploadedFile {
   id: string;
   name: string;
@@ -32,6 +34,15 @@ const FileUploadPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+   // Define base URL from environment variables
+    const API_URL = "http://localhost:8000"; // Matches main.py port
+    
+    // Create axios instance with base URL
+    const api = axios.create({
+      baseURL: API_URL,
+    });
+ 
  
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -86,6 +97,24 @@ const FileUploadPage: React.FC = () => {
   const removeFile = (fileId: string) => {
     setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
   };
+
+  const getAllGroupSummary = async (
+    groupId: string,
+    startDate: string,
+    endDate: string,
+    summaryRules: string
+  )=> {
+    try {
+      const response = await api.get(
+        `/groups/{GRP_BANDOBST_NORTH}/summary?start_date=${dateRange.start}&end_date=${dateRange.end}&summary_rules=${rulesPrompt}`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(`Summary query failed: ${error.message}`);
+    }
+  };
+
+  
  
   const handleUpload = async () => {
     setIsUploading(true);
@@ -268,7 +297,7 @@ const FileUploadPage: React.FC = () => {
               successfully.
             </p>
             <button
-              onClick={handleGenerateSummary}
+              onClick={()=>getAllGroupSummary}
               className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto text-lg font-semibold"
             >
               <span>Generate Summary</span>

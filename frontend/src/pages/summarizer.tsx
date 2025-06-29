@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   MessageCircle, Upload, Eye, Search, 
   FileText, Calendar, Users, CheckCircle, AlertCircle,
   RefreshCw, X, Package
 } from 'lucide-react';
 import Sidebar from '@/components/ui/sidebar';
+import {getGroups} from "@/api/api";
 
 interface WhatsAppGroup {
   id: string;
@@ -65,6 +66,16 @@ const WhatsAppSummarizer: React.FC = () => {
   ]);
   const [showPopup, setShowPopup] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+
+  const responseApi=async()=>{
+    const response = await getGroups();
+    console.log("Group Response :", response);
+  }
+  
+  useEffect(()=>{
+     responseApi();
+  },[]);
+  
 
   const handleFileSelect = (groupId: string, files: FileList | null) => {
     if (files) {

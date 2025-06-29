@@ -93,6 +93,23 @@ export const getGroupSummary = async (
     throw new Error(`Summary query failed: ${error.message}`);
   }
 };
+
+// Get group summary endpoint
+export const getAllGroupSummary = async (
+  groupId: string,
+  startDate: string,
+  endDate: string,
+  summaryRules: string
+): Promise<SummaryResponse> => {
+  try {
+    const response = await api.get(
+      `/groups/{GRP_BANDOBST_NORTH}/summary?start_date=${startDate}&end_date=${endDate}&summary_rules=${summaryRules}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Summary query failed: ${error.message}`);
+  }
+};
  
 // Query tasks by group ID
 export const queryGroupTasks = async (
