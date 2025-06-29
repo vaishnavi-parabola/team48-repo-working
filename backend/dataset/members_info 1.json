@@ -1,0 +1,228 @@
+{
+  "police_department_personnel": [
+    {
+      "id": "SP_DistrictHQ_001",
+      "name": "SP Rishaal",
+      "role": "Superintendent of Police",
+      "jurisdiction_type": "District",
+      "jurisdiction_name": "District HQ",
+      "": "+91-9849963300"
+    },
+    {
+      "id": "AddlSP_DistrictHQ_002",
+      "name": "Addl. SP Pravallika",
+      "role": "Additional Superintendent of Police"r,
+      "jurisdiction_type": "District",
+      "jurisdiction_name": "District HQ",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-8328414722"
+    },
+    {
+      "id": "DSP_VZMRural_003",
+      "name": "DSP Lovekik",
+      "role": "Deputy Superintendent of Police",
+      "jurisdiction_type": "Sub-Division",
+      "jurisdiction_name": "Vizianagaram Sub-Division",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-7382729772"
+    },
+    {
+      "id": "CI_VZMRural_004",
+      "name": "CI Yeshwanth",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "VZM Rural Circle",
+      "reports_to_id": "DSP_VZMRural_003",
+      "phone_number": "+91-9059540117"
+    },
+    {
+      "id": "SI_VZMRural_005",
+      "name": "SI Charitha",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "VZM Rural PS",
+      "reports_to_id": "CI_VZMRural_004",
+      "phone_number": "+91-7995297084"
+    },
+    {
+      "id": "CI_Bhogapuram_006",
+      "name": "CI Abhiram",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "Bhogapuram Circle",
+      "reports_to_id": "DSP_VZMRural_003",
+      "phone_number": "+91-9398982703"
+    },
+    {
+      "id": "CI_SKota_007",
+      "name": "CI Lahari",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "S.Kota Circle",
+      "reports_to_id": "DSP_VZMRural_003",
+      "phone_number": "+91-9392853382"
+    },
+    {
+      "id": "SI_SKota_008",
+      "name": "SI Naveen",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "S.Kota PS",
+      "reports_to_id": "CI_SKota_007",
+      "phone_number": "+91-7989091024"
+    },
+    {
+      "id": "DSP_BobbiliRural_009",
+      "name": "DSP Meghana",
+      "role": "Deputy Superintendent of Police",
+      "jurisdiction_type": "Sub-Division",
+      "jurisdiction_name": "Bobbili Sub-Division",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-8143264044"
+    },
+    {
+      "id": "CI_BobbiliRural_010",
+      "name": "CI Harshitha",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "Bobbili Rural Circle",
+      "reports_to_id": "DSP_BobbiliRural_009",
+      "phone_number": "+91-6301662422"
+    },
+    {
+      "id": "SI_BobbiliRural_011",
+      "name": "SI Hyndavi",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "Bobbili Rural PS",
+      "reports_to_id": "CI_BobbiliRural_010",
+      "phone_number": "+91-9182884659"
+    },
+    {
+      "id": "CI_Gajapathinagaram_012",
+      "name": "CI Koushik",
+      "role": "Circle Inspector",
+      "jurisdiction_typeitself": "Circle",
+      "jurisdiction_name": "Gajapathinagaram Circle",
+      "reports_to_id": "DSP_BobbiliRural_009",
+      "phone_number": "+91-8106873582"
+    },
+    {
+      "id": "DSP_Cheepurupalli_013",
+      "name": "DSP Aravind",
+      "role": "Deputy Superintendent of Police",
+      "jurisdiction_type": "Sub-Division",
+      "jurisdiction_name": "Cheepurupalli Sub-Division",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-9515574476"
+    },
+    {
+      "id": "CI_Cheepurupalli_014",
+      "name": "CI Eeshitha",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "Cheepurupalli Circle",
+      "reports_to_id": "DSP_Cheepurupalli_013",
+      "phone_number": "+91-7207372074"
+    },
+    {
+      "id": "SI_Cheepurupalli_015",
+      "name": "SI Sahithi",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "Cheepurupalli PS",
+      "reports_to_id": "CI_Cheepurupalli_014",
+      "phone_number": "+91-9391541455"
+    },
+    {
+      "id": "CI_Rajam_016",
+      "name": "CI Srinidhi",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "Rajam Circle",
+      "reports_to_id": "DSP_Cheepurupalli_013",
+      "phone_number": "+91-7207708829"
+    },
+    {
+      "id": "DSP_Salur_017",
+      "name": "DSP Sindhu",
+      "role": "Deputy Superintendent of Police",
+      " Jurisdiction_type": "Sub-Division",
+      "jurisdiction_name": "S.Kota Area Extension",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-9490479572"
+    },
+    {
+      "id": "CI_Salur_018",
+      "name": "CI Saketh",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "Salur Circle",
+      "reports_to_id": "DSP_Salur_017",
+      "phone_number": "+91-9705359372"
+    },
+    {
+      "id": "SI_Salur_019",
+      "name": "SI Vamsi Krishna",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "Salur PS",
+      "reports_to_id": "CI_Salur_018",
+      "phone_number": "+91-6303993623"
+    },
+    {
+      "id": "DSP_Parvathipuram_020",
+      "name": "DSP Vamsi",
+      "role": "Deputy Superintendent of Police",
+      "jurisdiction_type": "Sub-Division",
+      "jurisdiction_name": "Parvathipuram Sub-Division",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-9985062444"
+    },
+    {
+      "id": "CI_Parvathipuram_021",
+      "name": "CI Medhansh",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Circle",
+      "jurisdiction_name": "Parvathipuram Rural",
+      "reports_to_id": "DSP_Parvathipuram_020",
+      "phone_number": "+91-8106739072"
+    },
+    {
+      "id": "SI_Parvathipuram_022",
+      "name": "SI JafferVali",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "Parvathipuram Rural PS",
+      "reports_to_id": "CI_Parvathipuram_021",
+      "phone_number": "+91-8008717870"
+    },
+    {
+      "id": "DSP_BorderOps_023",
+      "name": "DSP Venkatesh",
+      "role": "Deputy Superintendent of Police",
+      "jurisdiction_type": "Special Operations",
+      "jurisdiction_name": "Inter-District Special Ops",
+      "reports_to_id": "SP_DistrictHQ_001",
+      "phone_number": "+91-8106739072"
+    },
+    {
+      "id": "CI_BorderOps_024",
+      "name": "CI Prema Sri",
+      "role": "Circle Inspector",
+      "jurisdiction_type": "Special Operations",
+      "jurisdiction_name": "Border Operations",
+      "reports_to_id": "DSP_BorderOps_023",
+      "phone_number": "+91-9059720942"
+    },
+    {
+      "id": "SI_BorderOps_025",
+      "name": "SI Nikitha",
+      "role": "Sub Inspector",
+      "jurisdiction_type": "Beat/Station",
+      "jurisdiction_name": "Border Operations PS",
+      "reports_to_id": "CI_BorderOps_024",
+      "phone_number": "+91-9014894005"
+    }
+  ]
+}

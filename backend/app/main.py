@@ -9,6 +9,9 @@ from typing import List
 from dotenv import load_dotenv
 import boto3
 from datetime import datetime
+from typing import Dict, Any
+from fastapi.middleware.cors import CORSMiddleware
+
 # Load environment variables
 load_dotenv()
 
@@ -22,50 +25,29 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 # === App Imports (replace with real implementations) ===
 # from app.model.metadata_model import save_metadata
 from app.model.text_extractor_model import extract_pdf_text, extract_word_text, extract_excel_text
-from app.model.vectorstore_model import add_to_vectorstore
-from app.model.graph_model import init_graph
-from app.service.langstream_service import run_traced_claude_task
+from app.model.embedding_model import get_embedding
 from app.controller.chat_controller import answer_query
 from app.controller.task_controller import task_query
 from app.controller.user_controller import user_query
 from app.controller.group_task_controller import group_task  # make sure import is correct
 from app.controller.user_task_controller import user_task  # make sure import is correct
 from app.controller.summary_controller import summary_query
-# from app.controller.group_controller import group_query
-
-
-# === Embedding: Titan Embedder ===
-def get_embedding(text: str) -> list[float]:
-    bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
-
-    print("TEXT TYPE:", type(text))         
-    print("TEXT PREVIEW:", text[:100])      
-
-    payload = {
-        "inputText": text
-    }
-
-    try:
-        response = bedrock.invoke_model(
-            modelId="amazon.titan-embed-text-v1",
-            contentType="application/json",
-            accept="application/json",
-            body=json.dumps(payload)
-        )
-        result = json.loads(response["body"].read())
-        return result["embedding"]
-    except Exception as e:
-        print("ERROR during Titan embedding:", e)
-        raise
-
-
-
-
+from app.controller.group_task_controller import group_task
+from app.model.vectorstore_model import add_to_vectorstore
+from app.controller.group_controller import group_query
 
 # === Initialize FastAPI app ===
 app = FastAPI(title="AP Whatsapp", description="API for processing police documents and querying data")
 
-# Dataset directory
+app.add_middleware(
+        CORSMiddleware,
+        allow_origins="*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# Define dataset directory
 DATASET_DIR = "dataset"
 os.makedirs(DATASET_DIR, exist_ok=True)
 
@@ -180,7 +162,18 @@ async def upload_files(files: List[UploadFile] = File(...)):
                 failed_files.append({"filename": file.filename, "error": "No text extracted"})
                 continue
 
-            chunks = split_text_into_chunks(text, max_tokens=8000)
+            # Generate embedding and add to vector store
+            embedding = llm_utils.get_embedding(text)
+            llm_utils.add_to_vectorstore(
+                doc_id=file.filename,
+                embedding=embedding,
+                metadata={"type": "document", "path": file_path},
+                document_text=text
+            )
+            uploaded_files.append(file.filename)
+            logger.info(f"Processed and added {file.filename} to vector store")
+            # Chunk text if necessary
+            chunks = chunk_text(text, max_tokens=8192, overlap=100)
             for i, chunk in enumerate(chunks):
                 try:
                     embedding = llm_utils.get_embedding(chunk)
@@ -264,21 +257,40 @@ async def query_task(
 
 @app.post("/users")
 async def query_user(query: str = Form(...)):
+    """
+    Endpoint to query users.
+    """
     try:
         response = user_query(query)
+        print("response of users:",response)
         return JSONResponse(content={"status": "success", "response": response})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query failed: {type(e).__name__}: {str(e)}")
+    
+# def parse_response(response: str) -> Dict[str, Any]:
+#     try:
+#         json_match = re.search(r"```json\n(.*?)\n```", response, re.DOTALL)
+#         if not json_match:
+#             logger.error("No JSON block found in response")
+#             raise ValueError("Response does not contain a valid JSON block")
 
-@app.post("/users/task")
-async def query_user_task(query: str = Form(...)):
-    try:
-        response = user_query(query)
-        return JSONResponse(content={"status": "success", "response": response})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Query failed: {type(e).__name__}: {str(e)}")
+#         json_str = json_match.group(1)
+#         logger.info("Extracted JSON string: %s", json_str[:100] + "..." if len(json_str) > 100 else json_str)
+#         data = json.loads(json_str)
 
+#         if not isinstance(data, dict) or "status" not in data or "response" not in data:
+#             logger.error("Invalid response structure: missing 'status' or 'response'")
+#             raise ValueError("Invalid response structure")
 
+#         return data
+
+#     except json.JSONDecodeError as e:
+#         logger.error("Failed to parse JSON: %s", e)
+#         return {"status": "error", "message": f"Invalid JSON: {str(e)}"}
+#     except Exception as e:
+#         logger.error("Error parsing response: %s - %s", type(e).__name__, e)
+#         return {"status": "error", "message": f"Error: {str(e)}"}
+    
 @app.get("/users/{user_id}/groups/{group_id}/summary")
 async def get_group_summary(user_id: str, group_id: str, start_date: str, end_date: str, summary_rules:str):
     try:
@@ -303,14 +315,17 @@ async def get_group_summary(user_id: str, group_id: str, start_date: str, end_da
         return {"status": "error", "message": str(e)}
     
 @app.get("/groups")
-async def get_groups():
+async def get_group():
     try:
-        response = group_query()
-        return JSONResponse(content={"status": "success", "response": response})
+        response=group_query()
+        logger.info("Parsed summary response: %s", response)
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Query failed: {type(e).__name__}: {str(e)}")
+        logger.error("Error processing summary for user_id %s, group_id %s: %s - %s", 
+                     user_id, group_id, type(e).__name__, e)
+        return {"status": "error", "message": str(e)}
 
-    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
