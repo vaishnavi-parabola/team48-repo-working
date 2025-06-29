@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Clock, User, Calendar, Search, AlertCircle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Clock,
+  User,
+  Calendar,
+  Search,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
 import Sidebar from "@/components/ui/sidebar";
 import { queryUserTasks } from "@/api/api";
 
@@ -19,52 +26,89 @@ const MyTasks = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await queryUserTasks("8328414722"); // Hardcoded user ID
-        console.log("API Response:", response); // Log to verify structure
-        if (response.status === "success") {
-          let parsedResponse = response.response; // Direct access if already an object
-          if (typeof parsedResponse === "string") {
-            try {
-              parsedResponse = JSON.parse(parsedResponse);
-            } catch (parseError) {
-              setError("Failed to parse API response.");
-              console.error("Parse Error:", parseError);
-              return;
+  // Use ref to prevent duplicate calls
+  const isFetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
+
+  const fetchTasks = async () => {
+    // Prevent duplicate calls
+    if (isFetchingRef.current) {
+      console.log("Already fetching, skipping duplicate call");
+      return;
+    }
+
+    isFetchingRef.current = true;
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("Starting task fetch...");
+      const response = await queryUserTasks("91 8328414722");
+
+      // Handle the nested response structure
+      if (response.status === "success" && response.response) {
+        // Check if it's a nested success response
+        const actualResponse =
+          response.response.status === "success"
+            ? response.response.response
+            : response.response;
+
+        // Extract only assigned_to_user tasks (tasks assigned TO the user)
+        const assignedToUserTasks = (actualResponse.assigned_to_user || []).map(
+          (task: any, index: number) => {
+            // Use date + timestamp for dueDate, fallback to deadline if available
+            let dueDate = "";
+            if (task.date) {
+              dueDate = task.timestamp
+                ? `${task.date} ${task.timestamp}`
+                : task.date;
+            } else if (task.deadline) {
+              dueDate = task.deadline;
             }
-          }
-          if (parsedResponse && parsedResponse.response) {
-            const assignedToUserTasks = (
-              parsedResponse.response.assigned_to_user || []
-            ).map((task: any, index: number) => ({
+
+            return {
               id: index + 1,
-              title: task.task_name,
-              dueDate: task.deadline.includes(" ")
-                ? task.deadline
-                : `${task.deadline} ${task.timestamp || ""}`,
-              stage: task.status,
-              priority: task.priority,
+              title: task.task_name || "Unnamed Task",
+              dueDate: dueDate || "No date specified",
+              stage: task.status || "N/A",
+              priority: task.priority || "N/A",
               assignedBy: task.assigned_by || "N/A",
               completed: task.status === "Completed",
-            }));
-            setTasks(assignedToUserTasks);
-          } else {
-            setError("Unexpected data format in API response.");
+            };
           }
-        } else {
-          setError("Failed to fetch tasks.");
-        }
-      } catch (err) {
-        setError("An error occurred while fetching tasks.");
-        console.error(err);
-      } finally {
-        setLoading(false);
+        );
+
+        setTasks(assignedToUserTasks);
+        console.log("Successfully fetched tasks:", assignedToUserTasks);
+        hasFetchedRef.current = true;
+      } else {
+        throw new Error(
+          response.response?.message || "Unexpected API response format"
+        );
       }
-    };
-    fetchTasks();
-  }, []); // Empty dependency array ensures API call only on mount
+    } catch (err: any) {
+      console.error("Error fetching tasks:", err);
+      setError(err.message || "Failed to fetch tasks");
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
+
+  // Simplified useEffect - only run once on mount
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      fetchTasks();
+    }
+  }, []); // Empty dependency array - only run on mount
+
+  const handleRefresh = async () => {
+    console.log("Manual refresh triggered");
+    hasFetchedRef.current = false;
+    setTasks([]);
+    setError(null);
+    await fetchTasks();
+  };
 
   const filteredTasks = tasks.filter(
     (task) =>
@@ -72,14 +116,21 @@ const MyTasks = () => {
       task.assignedBy.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Group tasks by date for better organization
   const tasksByDate = Object.entries(
-    filteredTasks.reduce((acc, task) => {
-      const date = task.dueDate.split(" ")[0];
+    filteredTasks.reduce((acc: Record<string, Task[]>, task) => {
+      // Extract just the date part (YYYY-MM-DD) from dueDate
+      const date = task.dueDate.split(" ")[0] || "No date";
       if (!acc[date]) acc[date] = [];
       acc[date].push(task);
       return acc;
     }, {})
-  ).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+  ).sort((a, b) => {
+    // Sort by date, with "No date" at the end
+    if (a[0] === "No date") return 1;
+    if (b[0] === "No date") return -1;
+    return new Date(b[0]).getTime() - new Date(a[0]).getTime();
+  });
 
   if (loading) {
     return (
@@ -99,10 +150,16 @@ const MyTasks = () => {
     return (
       <div className="flex h-screen bg-white">
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex flex-col items-center justify-center">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
             <p className="text-lg text-gray-600">{error}</p>
+            <button
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
           </div>
         </div>
       </div>
@@ -122,7 +179,7 @@ const MyTasks = () => {
                   My Tasks
                 </h1>
                 <p className="text-gray-600 text-sm">
-                  Manage and track your assigned tasks efficiently
+                  Tasks assigned to you - manage and track efficiently
                 </p>
               </div>
               {/* Search Bar */}
@@ -166,12 +223,12 @@ const MyTasks = () => {
                       <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
                         <Calendar className="w-5 h-5 text-blue-600" />
                         <span className="text-sm font-medium text-gray-900">
-                          {date}
+                          {date === "No date" ? "No date specified" : date}
                         </span>
-                        {/* <span className="bg-blue-50 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                        <span className="bg-blue-50 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
                           {dateTasks.length}{" "}
                           {dateTasks.length === 1 ? "task" : "tasks"}
-                        </span> */}
+                        </span>
                       </div>
                       <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
                     </div>
@@ -268,7 +325,7 @@ const MyTasks = () => {
   );
 };
 
-const getPriorityColor = (priority) => {
+const getPriorityColor = (priority: string) => {
   switch (priority) {
     case "High":
       return "bg-red-50 text-red-700 border border-red-200";
@@ -276,12 +333,14 @@ const getPriorityColor = (priority) => {
       return "bg-yellow-50 text-yellow-700 border border-yellow-200";
     case "Low":
       return "bg-green-50 text-green-700 border border-green-200";
+    case "General":
+      return "bg-blue-50 text-blue-700 border border-blue-200";
     default:
       return "bg-gray-50 text-gray-700 border border-gray-200";
   }
 };
 
-const getStageColor = (stage) => {
+const getStageColor = (stage: string) => {
   switch (stage) {
     case "In Progress":
       return "bg-blue-50 text-blue-700 border border-blue-200";
