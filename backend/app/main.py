@@ -32,6 +32,7 @@ from app.controller.summary_controller import summary_query
 from app.controller.group_task_controller import group_task
 from app.model.vectorstore_model import add_to_vectorstore
 from app.controller.group_controller import group_query
+from app.controller.all_summary import all_summary_query
  
 # Initialize FastAPI app
 app = FastAPI(title="AP Police AI Platform", description="API for processing police documents and querying data")
@@ -305,17 +306,41 @@ async def get_group_summary(user_id: str, group_id: str, start_date: str, end_da
         logger.error("Error processing summary for user_id %s, group_id %s: %s - %s",
                      user_id, group_id, type(e).__name__, e)
         return {"status": "error", "message": str(e)}
+    
+@app.get("/groups/{group_id}/summary")
+async def get_all_group_summary(group_id: str, start_date: str, end_date: str, summary_rules:str):
+    try:
+        # Validate date format
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d")
+            datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+ 
+        logger.info("Received request for summary: user_id=%s, group_id=%s, date range=%s to %s",
+                     group_id, start_date, end_date)
+        response = all_summary_query( group_id, start_date, end_date, summary_rules)
+        # parsed_data = parse_response(response)
+        logger.info("Parsed summary response: %s", response)
+        return response
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error("Error processing summary for user_id %s, group_id %s: %s - %s",
+                     group_id, type(e).__name__, e)
+        return {"status": "error", "message": str(e)}
    
 @app.get("/groups")
 async def get_group():
     try:
         response=group_query()
         logger.info("Parsed summary response: %s", response)
+        return JSONResponse(content={"status": "success", "response": response})
     except HTTPException as e:
         raise e
     except Exception as e:
         logger.error("Error processing summary for user_id %s, group_id %s: %s - %s",
-                     user_id, group_id, type(e).__name__, e)
+                      type(e).__name__, e)
         return {"status": "error", "message": str(e)}
  
 if __name__ == "__main__":

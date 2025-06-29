@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Upload,
@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { uploadFiles } from "@/api/api";
+import axios from "axios";
  
 interface UploadedFile {
   id: string;
@@ -64,6 +65,15 @@ const FileUploadPage: React.FC = () => {
     setUploadedFiles((prev) => [...prev, ...newFiles]);
     setIsUploading(false);
   };
+
+  const groupCall = async()=>{
+    const response=await axios.get("http:localhost:8000/groups");
+    console.log("reesponse from groups:", response.data);
+  }
+
+  useEffect(()=>{
+    groupCall();
+  },[]);
  
   const readFileContent = (file: File): Promise<string> => {
     return new Promise((resolve) => {

@@ -13,8 +13,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @traceable(name="Summary Agent")
-def summary_query(
-    user_id: str,
+def all_summary_query(
     group_id: str,
     start_date: str,
     end_date: str,
@@ -23,7 +22,7 @@ def summary_query(
 ) -> str:
     try:
         logger.info("Inside summary controller for user_id: %s, group_id: %s, date range: %s to %s", 
-                    user_id, group_id, start_date, end_date)
+                  group_id, start_date, end_date)
         
         # Step 1: Generate Titan embedding for the query
         query_embedding = get_embedding(summary_rules)
@@ -207,7 +206,7 @@ End of instructions.
 
    
         # Step 5: Get answer from Claude with LangSmith trace
-        return run_traced_claude_task(prompt, agent_name="Summary Agent")
+        return run_traced_claude_task(prompt, agent_name="ALl Summary Agent")
 
     except Exception as e:
         return f"❌ Error during query processing: {type(e).__name__} - {e}"

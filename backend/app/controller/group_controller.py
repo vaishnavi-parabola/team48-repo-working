@@ -80,7 +80,7 @@ Output Format (JSON):
 
         # Step 5: Claude generation
         claude_response = run_traced_claude_task(prompt, agent_name="Group Agent")
-        # logger.info("claude_response:", claude_response)
+        logger.info("claude_response:",run_traced_claude_task)
         # logger.debug(f"Claude raw response:")
         return claude_response
 
