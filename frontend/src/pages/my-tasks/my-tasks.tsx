@@ -168,10 +168,10 @@ const MyTasks = () => {
                         <span className="text-sm font-medium text-gray-900">
                           {date}
                         </span>
-                        <span className="bg-blue-50 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                        {/* <span className="bg-blue-50 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
                           {dateTasks.length}{" "}
                           {dateTasks.length === 1 ? "task" : "tasks"}
-                        </span>
+                        </span> */}
                       </div>
                       <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
                     </div>
