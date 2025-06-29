@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Clock, User, Calendar, Search } from "lucide-react";
+import { Clock, User, Calendar, Search, AlertCircle } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar";
 import { queryUserTasks } from "@/api/api";
 
@@ -9,7 +9,7 @@ export type Task = {
   dueDate: string;
   stage: string;
   priority: string;
-  assignee: string;
+  assignedBy: string;
   completed?: boolean;
 };
 
@@ -22,7 +22,7 @@ const MyTasks = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await queryUserTasks("91 8328414722"); // Hardcoded user ID
+        const response = await queryUserTasks("8328414722"); // Hardcoded user ID
         console.log("API Response:", response); // Log to verify structure
         if (response.status === "success") {
           let parsedResponse = response.response; // Direct access if already an object
@@ -36,10 +36,9 @@ const MyTasks = () => {
             }
           }
           if (parsedResponse && parsedResponse.response) {
-            const allTasks = [
-              ...(parsedResponse.response.assigned_to_user || []),
-              ...(parsedResponse.response.assigned_by_user || []),
-            ].map((task: any, index: number) => ({
+            const assignedToUserTasks = (
+              parsedResponse.response.assigned_to_user || []
+            ).map((task: any, index: number) => ({
               id: index + 1,
               title: task.task_name,
               dueDate: task.deadline.includes(" ")
@@ -47,10 +46,10 @@ const MyTasks = () => {
                 : `${task.deadline} ${task.timestamp || ""}`,
               stage: task.status,
               priority: task.priority,
-              assignee: task.assigned_by || task.assigned_to || "N/A",
+              assignedBy: task.assigned_by || "N/A",
               completed: task.status === "Completed",
             }));
-            setTasks(allTasks);
+            setTasks(assignedToUserTasks);
           } else {
             setError("Unexpected data format in API response.");
           }
@@ -65,12 +64,12 @@ const MyTasks = () => {
       }
     };
     fetchTasks();
-  }, []);
+  }, []); // Empty dependency array ensures API call only on mount
 
   const filteredTasks = tasks.filter(
     (task) =>
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.assignee.toLowerCase().includes(searchTerm.toLowerCase())
+      task.assignedBy.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const tasksByDate = Object.entries(
@@ -131,7 +130,7 @@ const MyTasks = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search tasks or assignees..."
+                  placeholder="Search tasks or assigned by..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-72 pl-10 pr-4 py-2.5 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 transition-all duration-200 text-gray-800 placeholder-gray-500 text-sm"
@@ -193,7 +192,7 @@ const MyTasks = () => {
                           Priority
                         </div>
                         <div className="col-span-3 text-sm font-semibold">
-                          Assignee
+                          Assigned By
                         </div>
                       </div>
                     </div>
@@ -244,12 +243,12 @@ const MyTasks = () => {
                                 </span>
                               </div>
 
-                              {/* Assignee */}
+                              {/* Assigned By */}
                               <div className="col-span-3 text-gray-800 text-sm">
                                 <div className="flex items-center gap-1">
                                   <User className="w-4 h-4 text-gray-400" />
                                   <span className="truncate">
-                                    {task.assignee}
+                                    {task.assignedBy}
                                   </span>
                                 </div>
                               </div>
