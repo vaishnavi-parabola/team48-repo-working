@@ -61,7 +61,7 @@ interface UserProfileData {
 
 const Dashboard = () => {
   const location = useLocation();
-  const role = location.state?.role || "SI"; // Default to SI if no role is found
+  const role = location.state?.role || "SP"; // Default to SI if no role is found
 
   const currentDate = new Date();
 
