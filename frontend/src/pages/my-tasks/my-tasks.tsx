@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Clock, User, Calendar, Search, AlertCircle } from "lucide-react";
+import {
+  Clock,
+  User,
+  Calendar,
+  Search,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
 import Sidebar from "@/components/ui/sidebar";
 import { queryUserTasks } from "@/api/api";
 
@@ -18,53 +25,59 @@ const MyTasks = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fetched, setFetched] = useState(false);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await queryUserTasks("91 8328414722");
+      if (
+        response.status === "success" &&
+        response.response.status === "success"
+      ) {
+        const assignedToUserTasks = (
+          response.response.response.assigned_to_user || []
+        ).map((task: any, index: number) => ({
+          id: index + 1,
+          title: task.task_name || "Unnamed Task",
+          dueDate: task.deadline.includes(" ")
+            ? task.deadline
+            : `${task.deadline} ${task.timestamp || ""}`,
+          stage: task.status || "N/A",
+          priority: task.priority || "N/A",
+          assignedBy: task.assigned_by || "N/A",
+          completed: task.status === "Completed",
+        }));
+        setTasks(assignedToUserTasks);
+      } else if (response.response.message) {
+        throw new Error(response.response.message);
+      } else {
+        throw new Error("Unexpected API response format");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to fetch tasks");
+    } finally {
+      setLoading(false);
+      setFetched(true);
+    }
+  };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await queryUserTasks("8328414722"); // Hardcoded user ID
-        console.log("API Response:", response); // Log to verify structure
-        if (response.status === "success") {
-          let parsedResponse = response.response; // Direct access if already an object
-          if (typeof parsedResponse === "string") {
-            try {
-              parsedResponse = JSON.parse(parsedResponse);
-            } catch (parseError) {
-              setError("Failed to parse API response.");
-              console.error("Parse Error:", parseError);
-              return;
-            }
-          }
-          if (parsedResponse && parsedResponse.response) {
-            const assignedToUserTasks = (
-              parsedResponse.response.assigned_to_user || []
-            ).map((task: any, index: number) => ({
-              id: index + 1,
-              title: task.task_name,
-              dueDate: task.deadline.includes(" ")
-                ? task.deadline
-                : `${task.deadline} ${task.timestamp || ""}`,
-              stage: task.status,
-              priority: task.priority,
-              assignedBy: task.assigned_by || "N/A",
-              completed: task.status === "Completed",
-            }));
-            setTasks(assignedToUserTasks);
-          } else {
-            setError("Unexpected data format in API response.");
-          }
-        } else {
-          setError("Failed to fetch tasks.");
-        }
-      } catch (err) {
-        setError("An error occurred while fetching tasks.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    let isMounted = true;
+    if (!fetched && isMounted) {
+      fetchTasks();
+    }
+    return () => {
+      isMounted = false;
     };
-    fetchTasks();
-  }, []); // Empty dependency array ensures API call only on mount
+  }, [fetched]);
+
+  const handleRefresh = () => {
+    setFetched(false);
+    setTasks([]);
+    setError(null);
+  };
 
   const filteredTasks = tasks.filter(
     (task) =>
@@ -99,10 +112,16 @@ const MyTasks = () => {
     return (
       <div className="flex h-screen bg-white">
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex flex-col items-center justify-center">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
             <p className="text-lg text-gray-600">{error}</p>
+            <button
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
           </div>
         </div>
       </div>
