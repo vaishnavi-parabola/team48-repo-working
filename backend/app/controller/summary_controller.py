@@ -93,42 +93,103 @@ def summary_query(
 
         # Step 4: Compose Claude prompt
         prompt = f"""
-You are an AI assistant for the AP Police AI Platform, designed to summarize chat logs from police-related WhatsApp groups stored in a vector store. The documents include:
-
-1. **Chat logs** (e.g., `Part1.txt`, `Part2.txt`): Contain messages with metadata including group ID, user ID, date, and content for.
-2. **members_info.json**: User details with fields: user_id (e.g:SP_DistrictHQ_001), name, ole, jusrisdiction_type, jusrisdiction_name,phone_number
-3. **group_info.json**: Group details with fields: grp_id, gname, purpose.
-4. **hierarchy.json**: Reporting structure with fields: mem_id, Reports_to.
-5. **ranks.json**: Ranks and levels with fields: Rank, level.
-
-**Task**:
-Generate a summary of chat logs for a specific group ({group_id}) and user ({user_id}) within the date range {start_date} to {end_date}. The summary should:
-- Be organized by day within the date range.
-- List important tasks, operations, cases, and major incidents in bullet points.
-- Only include information grounded in the provided chat logs; do not hallucinate or invent details.
-- Include group and user metadata from `group_info.json` and `members_info.json`.
-- If no relevant data is found, return an empty summary with a note.
-
-**Response Format**:
-- Return a JSON object with:
-  - `summary`: List of daily summaries that is the summary of all the chats on that sepcified day, each with `date` and `points` (bullet points as strings).
-  - `group_details`: Group metadata (grp_id, group_name, group_purpose).
-  - `user_details`: User metadata (user_id, name, role, reports_to_id, jurisdiction_type, jurisdiction_name, phone_number, rank_level, reports_to_name).
-  - `note`: Explanation if no data is found (e.g., "No chat logs found for group {group_id}").
-- Enclose the response in triple backticks (```json```).
-- Ensure the response is factual, based only on the provided context.
-
-**Current Context**:
-# - Documents are stored in a vector store, processed via a FastAPI `/users` endpoint.
-- Documents include chat files for (`Part1.txt`,`Part2.txt`) for gname="Vizianagaram District Coordination"), (`Part1 1.txt`,`Part2 1.txt`) for gname="Bandobast & Resource Allocation - North Sub-Division",(`Part1 2.txt`) for gname="District Crime Branch - Vizianagaram".
-- Documents include chat files for  (`hierarchy.json`) gname="Vizianagaram District Coordination", (`hierarchy 1.json`) for gname="Bandobast & Resource Allocation - North Sub-Division",(`hierarchy 2.json`) for gname="District Crime Branch - Vizianagaram".
-- Documents include chat files for  (`memebers_info.json`) gname="Vizianagaram District Coordination", (`memebers_info 1.json`) for gname="Bandobast & Resource Allocation - North Sub-Division",(`memebers_info 2.json`) for gname="District Crime Branch - Vizianagaram".
-- Documents include chat files for  (`ranks.json`) gname="Vizianagaram District Coordination", (`ranks 1.json`) for gname="Bandobast & Resource Allocation - North Sub-Division",(`ranks 2.json`) for gname="District Crime Branch - Vizianagaram".
-- Documents include chat files for  (`summary_rules.json`) gname="Vizianagaram District Coordination", (`summary_rules 1.json`) for gname="Bandobast & Resource Allocation - North Sub-Division",(`summary_rules 2.json.json`) for gname="District Crime Branch - Vizianagaram".
-- Documents include chat files for  (`group_info.json`) gname="Vizianagaram District Coordination", (`group_info 1.json`) for gname="Bandobast & Resource Allocation - North Sub-Division",(`group_info 2.json`) for gname="District Crime Branch - Vizianagaram".
-- Context includes vector store search results with chunks of relevant documents.
-
+You are an AI summarization assistant for a multi-group police command system in Andhra Pradesh.
+ 
 ---
+ 
+Input Parameters:
+ 
+- Officer requesting summary:
+  Name: {{officer_name}}
+  User ID: {{user_id}}
+  Rank: {{officer_rank}}
+ 
+- Date Range: {{start_date}} to {{end_date}}
+ 
+- Group(s) Involved: {{group_ids}}  
+  Each group has its own internal files for officers, hierarchy, chat logs, and rules.
+ 
+- Summary Rule:
+  "{{summary_rules}}"  
+  This includes both the **content themes** (e.g., escalations, VIP planning) and the **expected output format** (e.g., bullet points grouped by date). Follow it precisely.
+ 
+---
+ 
+Group-wise File Mapping:
+ 
+| Group ID           | Group Files Used                                                                 |
+|--------------------|----------------------------------------------------------------------------------|
+| GRP_COORD_VZM      | members_info.json, ranks.json, group_info.json, Part1.txt, Part2.txt            |
+| GRP_BANDOBST_NORTH | members_info 1.json, ranks 1.json, group_info 1.json, Part1 1.txt, Part2 1.txt  |
+| GRP_DCB_VZM        | members_info 2.json, ranks 2.json, group_info 2.json, Part1 2.txt               |
+ 
+Always use **only the files associated with the group_id(s) mentioned in the input**. Do not use data from other groups.
+ 
+---
+ 
+What to Do:
+ 
+1. **Use only chat messages** between `{{start_date}}` and `{{end_date}}`, strictly inclusive.
+ 
+2. For each `group_id`, you are given:
+   - `group_info*.json`: Contains group name and purpose. Include these in your output.
+   - `members_info*.json`: Officer metadata with name, role, jurisdiction, reports_to_id.
+   - `ranks*.json`: Rank-level mapping (e.g., SP = Level 1).
+   - `Part*.txt`: Raw chat logs extracted from ChromaDB, filtered by date and group.
+ 
+3. **Hierarchy Inference (per group)**:
+   - Officers with `reports_to_id = null` are top-level.
+   - An officer's subordinates are defined recursively through `reports_to_id`.
+   - Use only the `members_info` for the current group to infer relationships.
+   - Only include chats where the sender is the requesting officer or one of their subordinates in that group.
+ 
+4. **Message Attribution**:
+   - Match chat message senders using `user_id` from members_info.
+   - If sender ID is missing or unmatched, ignore that message as external.
+ 
+5. **Summary Generation**:
+   - For each date in the range, summarize the valid messages using `summary_rules`.
+   - Include only information related to the requested themes (e.g., VIP planning, escalations).
+   - Do not hallucinate; summarize only what is explicitly in the logs.
+   - If no valid updates exist for a date, output: `"No relevant updates found."`
+ 
+---
+ 
+Output Format:
+ 
+```json
+{
+  "summary": [
+    {
+      "date": "YYYY-MM-DD",
+      "points": [
+        "[Group Name] Bullet point about relevant event or update",
+        "[Group ID] Another relevant bullet point"
+      ]
+    },
+    ...
+  ],
+  "group_details": [
+    {
+      "group_id": "...",
+      "group_name": "...",
+      "group_purpose": "..."
+    },
+    ...
+  ],
+  "user_details": {
+    "user_id": "...",
+    "name": "...",
+    "role": "...",
+    "jurisdiction_type": "...",
+    "jurisdiction_name": "...",
+    "reports_to_id": "...",
+    "phone_number": "...",
+    "rank_level": ...
+  },
+  "note": "Explain if no data found or no valid chat logs matched the criteria."
+  
+  ---
 
 📄 Document Context:
 {context}
@@ -137,7 +198,7 @@ Generate a summary of chat logs for a specific group ({group_id}) and user ({use
 {summary_rules}
 
 ---
-"""
+}```"""
 
    
         # Step 5: Get answer from Claude with LangSmith trace

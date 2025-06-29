@@ -1,0 +1,34 @@
+[
+  {
+    "mem_id": "MEM001",
+    "Reports_to": null
+  },
+  {
+    "mem_id": "MEM002",
+    "Reports_to": "MEM001"
+  },
+  {
+    "mem_id": "MEM003",
+    "Reports_to": "MEM001"
+  },
+  {
+    "mem_id": "MEM004",
+    "Reports_to": "MEM002"
+  },
+  {
+    "mem_id": "MEM005",
+    "Reports_to": "MEM001"
+  },
+  {
+    "mem_id": "MEM006",
+    "Reports_to": "MEM003"
+  },
+  {
+    "mem_id": "MEM007",
+    "Reports_to": "MEM002"
+  },
+  {
+    "mem_id": "MEM008",
+    "Reports_to": "MEM003"
+  }
+]

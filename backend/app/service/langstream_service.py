@@ -1,14 +1,3 @@
-# from langsmith import traceable
-
-# @traceable(name="run_claude_task_with_tracing")
-# def run_traced_claude_task(prompt: str) -> str:
-#     from app.model.llm_model import run_claude_task
-#     return run_claude_task(prompt)
-
-
-# app/service/langstream_service.py
-# app/service/langstream_service.py
-
 import os
 from langchain_aws.chat_models import ChatBedrock
 from langchain_core.runnables import RunnableLambda
