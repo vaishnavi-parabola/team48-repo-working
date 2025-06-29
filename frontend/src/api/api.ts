@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // Define base URL from environment variables
-const API_URL = "http://localhost:8001";
+const API_URL = "http://localhost:8001"; // Updated to match main.py port
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -72,8 +72,57 @@ export const getGroupSummary = async (
   summaryRules: string
 ): Promise<SummaryResponse> => {
   const response = await api.get(
-    `/users/${userId}/groups/${groupId}/summary?start_date=${startDate}&end_date=${end_date}&summary_rules=${summaryRules}`
+    `/users/${userId}/groups/${groupId}/summary?start_date=${startDate}&end_date=${endDate}&summary_rules=${summaryRules}`
   );
+  return response.data;
+};
+
+// New endpoint: Query tasks by group ID
+export const queryGroupTasks = async (
+  groupId: string
+): Promise<QueryResponse> => {
+  const response = await api.post(
+    "/groups/groupid/task",
+    new URLSearchParams({ group_id: groupId }),
+    {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    }
+  );
+  return response.data;
+};
+
+// New endpoint: Query tasks by user phone number
+export const queryUserTasks = async (
+  userPhoneNumber: string,
+  query: string = "get tasks assigned for the role which we are providing and get it from all groups if user exits in all groups  "
+): Promise<QueryResponse> => {
+  const response = await api.post(
+    "/groups/userid/task",
+    new URLSearchParams({ user_phone_number: userPhoneNumber, query }),
+    {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    }
+  );
+  return response.data;
+};
+
+// New endpoint: Query user tasks (alternative to /users/task)
+export const queryUserTask = async (query: string): Promise<QueryResponse> => {
+  const response = await api.post(
+    "/users/task",
+    new URLSearchParams({ query }),
+    {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    }
+  );
+  return response.data;
+};
+
+// New endpoint: Get all groups
+export const getGroups = async (): Promise<QueryResponse> => {
+  const response = await api.get("/groups", {
+    headers: { "Content-Type": "application/json" },
+  });
   return response.data;
 };
 

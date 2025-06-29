@@ -31,7 +31,7 @@ from app.controller.user_controller import user_query
 from app.controller.group_task_controller import group_task  # make sure import is correct
 from app.controller.user_task_controller import user_task  # make sure import is correct
 from app.controller.summary_controller import summary_query
-from app.controller.group_controller import group_query
+# from app.controller.group_controller import group_query
 
 
 # === Embedding: Titan Embedder ===

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, User, Calendar, Search } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar";
+import { queryUserTasks } from "@/api/api";
 
-// Sample data
 export type Task = {
   id?: number;
   title: string;
@@ -13,57 +13,59 @@ export type Task = {
   completed?: boolean;
 };
 
-const initialTasks = [
-  {
-    id: 1,
-    title: "Monthly Crime Statistics Review",
-    dueDate: "2025-06-28 5:00 PM",
-    stage: "In Progress",
-    priority: "High",
-    assignee: "Senior Inspector Rajesh Malhotra",
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "Team Performance Evaluation",
-    dueDate: "2025-06-28 2:00 PM",
-    stage: "Pending",
-    priority: "Medium",
-    assignee: "Head Constable Patel",
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "Community Outreach Program",
-    dueDate: "2025-06-27 10:00 AM",
-    stage: "Planning",
-    priority: "Low",
-    assignee: "Constable Sharma",
-    completed: false,
-  },
-  {
-    id: 4,
-    title: "Traffic Violation Report",
-    dueDate: "2025-06-27 9:30 AM",
-    stage: "Completed",
-    priority: "Medium",
-    assignee: "Constable Kumar",
-    completed: true,
-  },
-  {
-    id: 5,
-    title: "Incident Investigation Follow-up",
-    dueDate: "2025-06-26 3:00 PM",
-    stage: "In Progress",
-    priority: "High",
-    assignee: "Constable Singh",
-    completed: false,
-  },
-];
-
 const MyTasks = () => {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await queryUserTasks("91 8328414722"); // Hardcoded user ID
+        console.log("API Response:", response); // Log to verify structure
+        if (response.status === "success") {
+          let parsedResponse = response.response; // Direct access if already an object
+          if (typeof parsedResponse === "string") {
+            try {
+              parsedResponse = JSON.parse(parsedResponse);
+            } catch (parseError) {
+              setError("Failed to parse API response.");
+              console.error("Parse Error:", parseError);
+              return;
+            }
+          }
+          if (parsedResponse && parsedResponse.response) {
+            const allTasks = [
+              ...(parsedResponse.response.assigned_to_user || []),
+              ...(parsedResponse.response.assigned_by_user || []),
+            ].map((task: any, index: number) => ({
+              id: index + 1,
+              title: task.task_name,
+              dueDate: task.deadline.includes(" ")
+                ? task.deadline
+                : `${task.deadline} ${task.timestamp || ""}`,
+              stage: task.status,
+              priority: task.priority,
+              assignee: task.assigned_by || task.assigned_to || "N/A",
+              completed: task.status === "Completed",
+            }));
+            setTasks(allTasks);
+          } else {
+            setError("Unexpected data format in API response.");
+          }
+        } else {
+          setError("Failed to fetch tasks.");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching tasks.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
 
   const filteredTasks = tasks.filter(
     (task) =>
@@ -79,6 +81,34 @@ const MyTasks = () => {
       return acc;
     }, {})
   ).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-white">
+        <Sidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Clock className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-lg text-gray-600">Loading tasks...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-white">
+        <Sidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+            <p className="text-lg text-gray-600">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-white">
@@ -262,6 +292,8 @@ const getStageColor = (stage) => {
       return "bg-purple-50 text-purple-700 border border-purple-200";
     case "Completed":
       return "bg-green-50 text-green-700 border border-green-200";
+    case "Assigned":
+      return "bg-indigo-50 text-indigo-700 border border-indigo-200";
     default:
       return "bg-gray-50 text-gray-700 border border-gray-200";
   }
