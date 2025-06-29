@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   MessageCircle, Upload, Eye, Search, 
   FileText, Calendar, Users, CheckCircle, AlertCircle,
   RefreshCw, X, Package
 } from 'lucide-react';
 import Sidebar from '@/components/ui/sidebar';
+import axios from "axios";
 
 interface WhatsAppGroup {
   id: string;
@@ -63,9 +64,11 @@ const WhatsAppSummarizer: React.FC = () => {
       isProcessing: false
     }
   ]);
+ 
+
   const [showPopup, setShowPopup] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
-
+  const [group, setGroup]=useState();
   const handleFileSelect = (groupId: string, files: FileList | null) => {
     if (files) {
       const fileArray = Array.from(files);
@@ -94,6 +97,18 @@ const WhatsAppSummarizer: React.FC = () => {
   const removeBulkFile = (fileId: string) => {
     setBulkUploadFiles(prev => prev.filter(f => f.id !== fileId));
   };
+
+  const getgroup= async()=>{
+    const response=await axios.get("http://localhost:8000/groups",{
+    });
+    setGroup(response.data);
+    console.log("groups:", response.data);
+  }
+
+  useEffect(()=>{
+    getgroup();
+  })
+  
 
   const updateBulkFileName = (fileId: string, newName: string) => {
     setBulkUploadFiles(prev => 
