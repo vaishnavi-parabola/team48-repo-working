@@ -32,7 +32,7 @@ export default function LoginForm({
     });
 
     if (userRole) {
-      navigate("/dashboard", { state: { role: userRole } });
+      navigate("/upload", { state: { role: userRole } });
     } else {
       setError("Invalid email or password");
     }
